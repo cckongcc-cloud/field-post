@@ -126,6 +126,9 @@
   .blog-title{margin-bottom:8px;font-weight:700;}
   .hint{font-size:12px;line-height:1.55;color:var(--muted);margin:9px 2px 0;}
   .hint b{color:var(--ink);font-weight:700;}
+  .sendbtn{width:100%;margin-top:11px;border:1.5px solid var(--accent);background:var(--accent);color:var(--accent-ink);
+    font-family:inherit;font-size:15px;font-weight:800;padding:13px;border-radius:var(--r);cursor:pointer;transition:transform .06s;}
+  .sendbtn:active{transform:translateY(1px);}
   .hidden{display:none;}
 
   .save{
@@ -227,6 +230,8 @@
           <input type="text" id="blogTitle" class="blog-title" />
           <textarea id="blogOut" rows="13"></textarea>
           <p class="hint">📷 자리엔 <b>직접 찍은 원본 사진</b>을, (직접) 자리엔 <b>실제 겪은 것·수치</b>를 채워 발행하세요. 원본 사진과 구체적 수치가 네이버 상위노출의 핵심이에요.</p>
+          <button class="sendbtn" id="sendPhotos">📤 사진 순서대로 앱으로 보내기</button>
+          <p class="hint">공유창에서 <b>네이버 블로그</b>를 고르면 전→후 순서로 사진이 새 글에 들어가요. 글은 자동 복사되니 붙여넣기만 하면 됩니다.</p>
         </div>
 
         <button class="save" id="save">기록에 저장</button>
@@ -238,7 +243,7 @@
       <div id="recList"></div>
     </section>
   </main>
-  <p class="foot">v0 · 로컬 저장 · 만든 건 내 폰 안에만</p>
+  <p class="foot">v1.3 · 로컬 저장 · 만든 건 내 폰 안에만</p>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -304,7 +309,7 @@ function renderLocChips(){
 // ---- photos ----
 $("#file").addEventListener("change",e=>{
   [...e.target.files].forEach(f=>{
-    photos.push({url:URL.createObjectURL(f),tag:""});
+    photos.push({url:URL.createObjectURL(f),file:f,tag:""});
   });
   e.target.value="";
   renderGrid();
@@ -448,6 +453,27 @@ $("#save").addEventListener("click",()=>{
   toast("기록에 저장됐어요");
 });
 
+// send photos to phone's share sheet (Naver Blog app, etc.) in order 전→후
+function orderedPhotoFiles(){
+  const rank=p=> p.tag==="before"?0 : p.tag==="after"?2 : 1;
+  return photos.slice()
+    .sort((a,b)=> rank(a)-rank(b) || ((a.file&&a.file.lastModified||0)-(b.file&&b.file.lastModified||0)))
+    .map(p=>p.file).filter(Boolean);
+}
+$("#sendPhotos").addEventListener("click",async()=>{
+  const files=orderedPhotoFiles();
+  if(!files.length){toast("사진을 먼저 추가하세요");return;}
+  const text=($("#blogTitle").value||"")+"\n\n"+($("#blogOut").value||"");
+  try{ if(navigator.clipboard&&navigator.clipboard.writeText) await navigator.clipboard.writeText(text); }catch(e){}
+  if(navigator.canShare && navigator.canShare({files})){
+    try{ await navigator.share({files, title:$("#blogTitle").value||"현장포스트", text});
+         toast("글은 복사됐어요 · 붙여넣기 하세요"); }
+    catch(e){ /* 사용자 취소 */ }
+  } else {
+    alert("이 기기는 앱으로 바로 보내기가 안 돼요.\n\n갤러리에서 사진을 선택 → 공유 → 네이버 블로그 앱으로 보내세요. 글은 이미 복사돼 있으니 붙여넣으면 됩니다.");
+  }
+});
+
 // history
 function renderRecs(){
   const list=$("#recList");
@@ -491,11 +517,6 @@ $$(".tab").forEach(t=>t.onclick=()=>{
 $("#date").value=today();
 renderLocChips();
 renderRecs();
-
-// PWA: register service worker (works when hosted, e.g. GitHub Pages)
-if("serviceWorker" in navigator){
-  window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
-}
 </script>
 </body>
 </html>
