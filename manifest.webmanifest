@@ -2,7 +2,7 @@
   "name": "현장포스트",
   "short_name": "현장포스트",
   "description": "시공 끝나면 바로 인스타·네이버블로그 게시글",
-  "start_url": "./",
+  "start_url": "./field-post.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",

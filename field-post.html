@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#1a231b" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<title>현장포스트</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<link rel="manifest" href="./manifest.webmanifest" />
+<link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+<style>
+  :root{
+    --paper:#f1f2ed; --card:#ffffff; --ink:#1a1d18; --muted:#71776c;
+    --line:#e0e1da; --line-strong:#cdcfc5;
+    --header:#1a231b; --header-ink:#eef0e8;
+    --accent:#55606b; --accent-soft:#eceef0; --accent-ink:#ffffff;
+    --ok:#2f7d46; --danger:#b23b34;
+    --r:14px; --r-sm:10px;
+    --shadow:0 1px 0 var(--line-strong), 0 6px 18px -12px rgba(20,28,20,.5);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:"Pretendard","Pretendard Variable",-apple-system,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+    background:var(--paper); color:var(--ink);
+    -webkit-font-smoothing:antialiased; line-height:1.5;
+    padding-bottom:calc(env(safe-area-inset-bottom) + 24px);
+  }
+  .wrap{max-width:520px;margin:0 auto;}
+
+  /* Header */
+  header{
+    background:var(--header); color:var(--header-ink);
+    padding:calc(env(safe-area-inset-top) + 16px) 20px 16px;
+    position:sticky; top:0; z-index:20;
+    border-bottom:1px solid rgba(255,255,255,.08);
+  }
+  .eyebrow{
+    font-size:11px; letter-spacing:.28em; text-transform:uppercase;
+    color:rgba(238,240,232,.55); font-weight:600; margin:0 0 3px;
+    display:flex; align-items:center; gap:8px;
+  }
+  .signal{width:8px;height:8px;border-radius:50%;background:var(--accent);
+    box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 30%,transparent);transition:background .25s;}
+  h1{font-size:22px;margin:0;font-weight:800;letter-spacing:-.02em;}
+  .h1-sub{font-size:13px;color:rgba(238,240,232,.6);font-weight:500;margin-left:8px;}
+
+  /* Tabs */
+  .tabs{display:flex;gap:4px;margin-top:14px;}
+  .tab{
+    flex:1;background:rgba(255,255,255,.06);border:none;color:rgba(238,240,232,.7);
+    font-family:inherit;font-size:14px;font-weight:700;padding:10px;border-radius:var(--r-sm);
+    cursor:pointer;transition:.15s;
+  }
+  .tab.active{background:var(--header-ink);color:var(--header);}
+
+  main{padding:18px 16px 0;}
+  .view{display:none;}
+  .view.active{display:block;}
+
+  /* Compose */
+  .field{margin-bottom:16px;}
+  .label{font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.02em;margin:0 0 7px;display:block;}
+  .gong{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;}
+  .gong button{
+    font-family:inherit;font-size:14px;font-weight:700;padding:13px 8px;border-radius:var(--r-sm);
+    border:1.5px solid var(--line-strong);background:var(--card);color:var(--ink);cursor:pointer;
+    display:flex;align-items:center;justify-content:center;gap:7px;transition:.15s;
+  }
+  .gong button .dot{width:9px;height:9px;border-radius:50%;flex:none;}
+  .gong button[data-k="water"] .dot{background:#2477a8;}
+  .gong button[data-k="light"] .dot{background:#c8871f;}
+  .gong button[data-k="mow"] .dot{background:#4f7a3a;}
+  .gong button[data-k="etc"] .dot{background:#55606b;}
+  .gong button.on{border-color:var(--accent);background:var(--accent-soft);color:var(--ink);}
+
+  input[type="text"],input[type="date"],textarea{
+    width:100%;font-family:inherit;font-size:15px;color:var(--ink);
+    background:var(--card);border:1.5px solid var(--line-strong);border-radius:var(--r-sm);
+    padding:12px 13px;outline:none;transition:border-color .15s;
+  }
+  input:focus,textarea:focus{border-color:var(--accent);}
+  textarea{resize:vertical;min-height:64px;line-height:1.55;}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+  .chip{font-size:12.5px;font-weight:600;padding:6px 11px;border-radius:20px;border:1px solid var(--line-strong);
+    background:var(--card);color:var(--muted);cursor:pointer;}
+  .chip:active{background:var(--accent-soft);}
+
+  /* Photos */
+  .photo-add{
+    display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
+    border:1.5px dashed var(--line-strong);background:var(--card);color:var(--muted);
+    border-radius:var(--r-sm);padding:14px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;
+  }
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:9px;}
+  .ph{position:relative;aspect-ratio:1;border-radius:var(--r-sm);overflow:hidden;background:#ddd;cursor:pointer;}
+  .ph img{width:100%;height:100%;object-fit:cover;display:block;}
+  .ph .tag{position:absolute;left:5px;bottom:5px;font-size:10.5px;font-weight:800;letter-spacing:.03em;
+    padding:2px 6px;border-radius:5px;color:#fff;background:rgba(20,25,20,.72);}
+  .ph .tag.before{background:rgba(36,119,168,.9);}
+  .ph .tag.after{background:rgba(79,122,58,.92);}
+  .ph .rm{position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:50%;border:none;
+    background:rgba(20,25,20,.7);color:#fff;font-size:13px;line-height:1;cursor:pointer;}
+
+  .make{
+    width:100%;border:none;border-radius:var(--r);background:var(--accent);color:var(--accent-ink);
+    font-family:inherit;font-size:16px;font-weight:800;padding:16px;cursor:pointer;margin:4px 0 20px;
+    transition:transform .06s, background .25s;box-shadow:var(--shadow);
+  }
+  .make:active{transform:translateY(1px);}
+
+  /* Output */
+  .out{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:15px;margin-bottom:14px;box-shadow:var(--shadow);}
+  .out-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+  .out-head .t{font-size:13px;font-weight:800;letter-spacing:.02em;display:flex;align-items:center;gap:7px;}
+  .out-head .t .k{width:7px;height:7px;border-radius:50%;background:var(--accent);}
+  .btnrow{display:flex;gap:7px;}
+  .mini{font-family:inherit;font-size:12.5px;font-weight:700;padding:7px 12px;border-radius:8px;cursor:pointer;
+    border:1.5px solid var(--accent);background:var(--accent);color:var(--accent-ink);}
+  .mini.ghost{background:var(--card);color:var(--accent);}
+  .blog-title{margin-bottom:8px;font-weight:700;}
+  .hint{font-size:12px;line-height:1.55;color:var(--muted);margin:9px 2px 0;}
+  .hint b{color:var(--ink);font-weight:700;}
+  .hidden{display:none;}
+
+  .save{
+    width:100%;border:1.5px solid var(--line-strong);border-radius:var(--r);background:var(--card);color:var(--ink);
+    font-family:inherit;font-size:15px;font-weight:800;padding:14px;cursor:pointer;margin-bottom:22px;
+  }
+
+  /* History */
+  .empty{text-align:center;color:var(--muted);padding:56px 20px;font-size:14px;line-height:1.7;}
+  .empty .big{font-size:30px;margin-bottom:10px;}
+  .rec{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-bottom:11px;box-shadow:var(--shadow);}
+  .rec-top{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+  .rec-k{width:9px;height:9px;border-radius:50%;flex:none;}
+  .rec-date{font-size:12px;color:var(--muted);font-weight:600;font-variant-numeric:tabular-nums;}
+  .rec-loc{font-size:15px;font-weight:800;margin:0 0 3px;}
+  .rec-memo{font-size:13px;color:var(--muted);margin:0 0 11px;}
+  .rec-btns{display:flex;gap:7px;flex-wrap:wrap;}
+
+  .toast{
+    position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 22px);transform:translateX(-50%) translateY(20px);
+    background:var(--header);color:var(--header-ink);font-size:14px;font-weight:600;
+    padding:12px 20px;border-radius:24px;opacity:0;pointer-events:none;transition:.22s;z-index:50;box-shadow:0 10px 30px -8px rgba(0,0,0,.5);
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .foot{text-align:center;color:var(--muted);font-size:11px;padding:8px 0 4px;letter-spacing:.02em;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="eyebrow"><span class="signal" id="signal"></span>FIELD → POST</p>
+    <h1>현장포스트<span class="h1-sub">시공 끝나면 바로 한 장</span></h1>
+    <div class="tabs">
+      <button class="tab active" data-view="compose">작성</button>
+      <button class="tab" data-view="history">기록</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- COMPOSE -->
+    <section class="view active" id="compose">
+      <div class="field">
+        <span class="label">공종</span>
+        <div class="gong" id="gong">
+          <button data-k="water" data-name="자동관수"><span class="dot"></span>자동관수</button>
+          <button data-k="light" data-name="정원조명"><span class="dot"></span>정원조명</button>
+          <button data-k="mow" data-name="로봇예초"><span class="dot"></span>로봇예초</button>
+          <button data-k="etc" data-name="기타"><span class="dot"></span>기타</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="row2">
+          <div>
+            <span class="label">날짜</span>
+            <input type="date" id="date" />
+          </div>
+          <div>
+            <span class="label">위치</span>
+            <input type="text" id="loc" placeholder="예: 수원 광교 단독" />
+          </div>
+        </div>
+        <div class="chips" id="locChips"></div>
+      </div>
+
+      <div class="field">
+        <span class="label">한 줄 특이사항 <span style="font-weight:500">(선택)</span></span>
+        <input type="text" id="memo" placeholder="예: 6존 분할, 앱 원격제어" />
+      </div>
+
+      <div class="field">
+        <span class="label">사진 <span style="font-weight:500">(탭해서 전/후 표시)</span></span>
+        <label class="photo-add">
+          ＋ 사진 추가
+          <input type="file" id="file" accept="image/*" multiple class="hidden" />
+        </label>
+        <div class="grid" id="grid"></div>
+      </div>
+
+      <button class="make" id="make">초안 생성</button>
+
+      <div id="output" class="hidden">
+        <div class="out">
+          <div class="out-head">
+            <span class="t"><span class="k"></span>인스타그램</span>
+            <div class="btnrow">
+              <button class="mini ghost" data-share="insta">공유</button>
+              <button class="mini" data-copy="insta">복사</button>
+            </div>
+          </div>
+          <textarea id="instaOut" rows="9"></textarea>
+        </div>
+
+        <div class="out">
+          <div class="out-head">
+            <span class="t"><span class="k"></span>네이버 블로그</span>
+            <button class="mini" data-copy="blog">복사</button>
+          </div>
+          <input type="text" id="blogTitle" class="blog-title" />
+          <textarea id="blogOut" rows="13"></textarea>
+          <p class="hint">📷 자리엔 <b>직접 찍은 원본 사진</b>을, (직접) 자리엔 <b>실제 겪은 것·수치</b>를 채워 발행하세요. 원본 사진과 구체적 수치가 네이버 상위노출의 핵심이에요.</p>
+        </div>
+
+        <button class="save" id="save">기록에 저장</button>
+      </div>
+    </section>
+
+    <!-- HISTORY -->
+    <section class="view" id="history">
+      <div id="recList"></div>
+    </section>
+  </main>
+  <p class="foot">v0 · 로컬 저장 · 만든 건 내 폰 안에만</p>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const KEY="fieldpost_v0";
+const ACC={water:"#2477a8",light:"#c8871f",mow:"#4f7a3a",etc:"#55606b"};
+const SOFT={water:"#e4eff5",light:"#f6ecd8",mow:"#e8f0e2",etc:"#eceef0"};
+
+// ---- state ----
+let gong=null;        // {k,name}
+let photos=[];        // {url, tag:''|'before'|'after'}
+let store=load();
+
+function load(){ try{return JSON.parse(localStorage.getItem(KEY))||[]}catch(e){return []} }
+function persist(){ try{localStorage.setItem(KEY,JSON.stringify(store))}catch(e){} }
+
+// ---- helpers ----
+const $=s=>document.querySelector(s);
+const $$=s=>document.querySelectorAll(s);
+function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove("show"),1600);}
+function today(){const d=new Date();return d.toISOString().slice(0,10);}
+function fmtDate(s){const [y,m,d]=s.split("-");return `${y}.${m}.${d}`;}
+function copy(text){
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(()=>toast("복사됐어요")).catch(()=>fallbackCopy(text));
+  } else fallbackCopy(text);
+}
+function fallbackCopy(text){
+  const ta=document.createElement("textarea");ta.value=text;ta.style.position="fixed";ta.style.opacity="0";
+  document.body.appendChild(ta);ta.select();
+  try{document.execCommand("copy");toast("복사됐어요");}catch(e){toast("복사 안 됨 — 길게 눌러 직접 복사하세요");}
+  document.body.removeChild(ta);
+}
+
+// ---- accent ----
+function setAccent(k){
+  const a=ACC[k]||ACC.etc, s=SOFT[k]||SOFT.etc;
+  document.documentElement.style.setProperty("--accent",a);
+  document.documentElement.style.setProperty("--accent-soft",s);
+}
+
+// ---- 공종 select ----
+$("#gong").addEventListener("click",e=>{
+  const b=e.target.closest("button");if(!b)return;
+  $$("#gong button").forEach(x=>x.classList.remove("on"));
+  b.classList.add("on");
+  gong={k:b.dataset.k,name:b.dataset.name};
+  setAccent(gong.k);
+});
+
+// ---- location memory chips ----
+function renderLocChips(){
+  const seen=[...new Set(store.map(r=>r.loc).filter(Boolean))].slice(0,5);
+  const box=$("#locChips");box.innerHTML="";
+  seen.forEach(l=>{
+    const c=document.createElement("button");c.className="chip";c.textContent=l;
+    c.onclick=()=>{$("#loc").value=l;};
+    box.appendChild(c);
+  });
+}
+
+// ---- photos ----
+$("#file").addEventListener("change",e=>{
+  [...e.target.files].forEach(f=>{
+    photos.push({url:URL.createObjectURL(f),tag:""});
+  });
+  e.target.value="";
+  renderGrid();
+});
+function renderGrid(){
+  const g=$("#grid");g.innerHTML="";
+  photos.forEach((p,i)=>{
+    const d=document.createElement("div");d.className="ph";
+    d.innerHTML=`<img src="${p.url}">`+
+      (p.tag?`<span class="tag ${p.tag}">${p.tag==="before"?"BEFORE":"AFTER"}</span>`:"")+
+      `<button class="rm">×</button>`;
+    d.querySelector("img").onclick=()=>{ // cycle tag
+      p.tag = p.tag===""?"before":p.tag==="before"?"after":"";
+      renderGrid();
+    };
+    d.querySelector(".rm").onclick=ev=>{ev.stopPropagation();URL.revokeObjectURL(p.url);photos.splice(i,1);renderGrid();};
+    g.appendChild(d);
+  });
+}
+
+// ---- generation (template) ----
+const HOOKS={
+  water:["타이머 하나로 물 주는 걱정 끝.","호스 들고 뛰던 시절 안녕.","심어만 놓으면 알아서 자라는 정원의 시작.","여행 가도 마당은 알아서 물 마셔요."],
+  light:["해 지면 정원이 다시 살아납니다.","낮보다 밤이 더 예쁜 마당.","조명 하나로 분위기가 통째로 바뀝니다.","퇴근하고 켜지는 우리 집 정원 무드등."],
+  mow:["잔디 깎기, 이제 로봇한테 넘겼습니다.","주말마다 예초하던 시간 돌려드립니다.","알아서 깎고 알아서 충전, 사람 손 필요 없어요.","깔끔한 잔디, 땀 한 방울 없이."],
+  etc:["오늘 마무리한 현장 기록합니다.","한 뼘씩 완성되는 마당.","현장에서 바로 전해드립니다.","이번 시공도 깔끔하게 마감."]
+};
+const HASH={
+  common:["조경","정원","스마트조경","조경시공","정원시공","전원주택"],
+  water:["자동관수","관수시스템","스프링클러","점적관수","정원관리"],
+  light:["정원조명","가든조명","조경조명","야간조경","무드조명"],
+  mow:["로봇잔디깎기","로봇예초기","잔디관리","무인예초","스마트가든"],
+  etc:["조경디자인","마당꾸미기","가든디자인"]
+};
+const KIND={water:"자동관수 시스템",light:"정원조명",mow:"로봇 예초 시스템",etc:"조경"};
+
+function pick(arr){return arr[Math.floor(Math.random()*arr.length)];}
+
+function genInsta(){
+  const loc=$("#loc").value.trim(), memo=$("#memo").value.trim();
+  const kind=KIND[gong.k];
+  const head=`${loc?loc+" ":""}${kind} 시공 완료`;
+  const hook=pick(HOOKS[gong.k]);
+  const locTag=loc?[loc.replace(/\s+/g,"")]:[];
+  const tags=[...HASH.common,...HASH[gong.k],...locTag].map(t=>"#"+t).join(" ");
+  return [
+    head,
+    "",
+    hook,
+    memo?("\n"+memo):"",
+    "\n조경·정원 시공 문의는 프로필 링크 또는 DM 📩",
+    "",
+    tags
+  ].filter(x=>x!=="").join("\n").replace(/\n{3,}/g,"\n\n");
+}
+function genBlogTitle(){
+  const loc=$("#loc").value.trim(), kind=KIND[gong.k], pre=loc?"["+loc+"] ":"";
+  return pick([
+    `${pre}${kind} 시공 후기`,
+    `${pre}${kind}, 이렇게 시공했습니다`,
+    `${pre}${kind} 설치 과정 기록`,
+    `${pre}${kind} 시공 — 현장 그대로`
+  ]);
+}
+function genBlog(){
+  const loc=$("#loc").value.trim(), memo=$("#memo").value.trim();
+  const kind=KIND[gong.k], date=fmtDate($("#date").value||today());
+  const b=photos.filter(p=>p.tag==="before").length;
+  const a=photos.filter(p=>p.tag==="after").length;
+  const u=photos.filter(p=>!p.tag).length;
+  const before = `📷 [시공 전 사진${b?" "+b+"장":""} 넣기]`;
+  const after  = `📷 [시공 후 사진${a?" "+a+"장":""} 넣기]`;
+  const mid    = `📷 [작업 중 사진${u?" "+u+"장":""} 넣기]`;
+  const locTag = loc?[loc.replace(/\s+/g,"")]:[];
+  const tags   = [...HASH.common,...HASH[gong.k],...locTag].map(t=>"#"+t).join(" ");
+  const cta    = "스마트 조경 — 자동관수 · 정원조명 · 로봇예초. 현장 확인 후 견적 드립니다. 문의는 댓글이나 톡으로 주세요.";
+
+  // 뼈대 3종 랜덤 — 매번 구조가 달라지게. (직접)은 실제 경험을 채우는 칸.
+  const V=[
+    ()=>[
+      `${loc||"이번 현장"} ${kind} 시공 다녀왔습니다. (${date})`,"",
+      before,
+      "시공 전 상태와 고객 요청 (직접 — 어떤 상태였고 뭘 원하셨는지)",
+      memo?`특이사항: ${memo}`:"","",
+      "■ 어떻게 했나","(직접 — 자재·장비, 존 개수·소요시간 같은 구체적 수치)",mid,"",
+      "■ 시공 후",after,"(직접 — 뭐가 어떻게 달라졌는지, 사용법 한 줄)","",
+      "■ 마무리",cta,"",tags
+    ],
+    ()=>[
+      `${kind}, ${loc||"현장"}에서는 이렇게 시공합니다. (${date})`,"",
+      "■ 이번 현장",`· 위치: ${loc||"(직접)"}`,`· 공종: ${kind}`,memo?`· 특이사항: ${memo}`:"",
+      before,"",
+      "■ 시공 포인트","(직접 — 이 현장에서 신경 쓴 점, 자재·수치 구체적으로)",mid,"",
+      "■ 완성",after,"(직접 — 결과 한두 줄)","",
+      "■ 이런 분께",cta,"",tags
+    ],
+    ()=>[
+      `${loc?loc+" ":""}${kind}로 이런 걸 해결했습니다. (${date})`,"",
+      "■ 고민",memo?memo:"(직접 — 고객이 겪던 불편/요청)",before,"",
+      "■ 해결 과정","(직접 — 어떤 방식으로, 어떤 자재로, 얼마나 걸렸는지)",mid,"",
+      "■ 결과",after,"(직접 — 달라진 점, 관리 팁 한 줄)","",
+      cta,"",tags
+    ]
+  ];
+  return pick(V)().filter(x=>x!=="").join("\n").replace(/\n{3,}/g,"\n\n");
+}
+
+$("#make").addEventListener("click",()=>{
+  if(!gong){toast("공종을 먼저 골라주세요");return;}
+  $("#instaOut").value=genInsta();
+  $("#blogTitle").value=genBlogTitle();
+  $("#blogOut").value=genBlog();
+  $("#output").classList.remove("hidden");
+  $("#output").scrollIntoView({behavior:"smooth",block:"start"});
+});
+
+// copy / share
+document.addEventListener("click",e=>{
+  const cp=e.target.closest("[data-copy]");
+  if(cp){
+    if(cp.dataset.copy==="insta") copy($("#instaOut").value);
+    else copy($("#blogTitle").value+"\n\n"+$("#blogOut").value);
+  }
+  const sh=e.target.closest("[data-share]");
+  if(sh){
+    const text=$("#instaOut").value;
+    if(navigator.share) navigator.share({text}).catch(()=>{});
+    else copy(text);
+  }
+});
+
+// save
+$("#save").addEventListener("click",()=>{
+  if(!gong){toast("공종을 먼저 골라주세요");return;}
+  store.unshift({
+    id:Date.now(), k:gong.k, kind:gong.name,
+    date:$("#date").value||today(), loc:$("#loc").value.trim(), memo:$("#memo").value.trim(),
+    insta:$("#instaOut").value, blogTitle:$("#blogTitle").value, blog:$("#blogOut").value
+  });
+  persist();renderRecs();renderLocChips();
+  toast("기록에 저장됐어요");
+});
+
+// history
+function renderRecs(){
+  const list=$("#recList");
+  if(!store.length){
+    list.innerHTML=`<div class="empty"><div class="big">🪴</div>아직 저장한 게시물이 없어요.<br>첫 현장부터 올려보세요.</div>`;
+    return;
+  }
+  list.innerHTML="";
+  store.forEach(r=>{
+    const el=document.createElement("div");el.className="rec";
+    el.innerHTML=`
+      <div class="rec-top">
+        <span class="rec-k" style="background:${ACC[r.k]||ACC.etc}"></span>
+        <span class="rec-date">${fmtDate(r.date)} · ${r.kind}</span>
+      </div>
+      <p class="rec-loc">${r.loc||"위치 미입력"}</p>
+      ${r.memo?`<p class="rec-memo">${r.memo}</p>`:""}
+      <div class="rec-btns">
+        <button class="mini" data-c="insta">인스타 복사</button>
+        <button class="mini ghost" data-c="blog">블로그 복사</button>
+        <button class="mini ghost" data-c="del" style="border-color:var(--danger);color:var(--danger)">삭제</button>
+      </div>`;
+    el.querySelector('[data-c="insta"]').onclick=()=>copy(r.insta);
+    el.querySelector('[data-c="blog"]').onclick=()=>copy(r.blogTitle+"\n\n"+r.blog);
+    el.querySelector('[data-c="del"]').onclick=()=>{
+      store=store.filter(x=>x.id!==r.id);persist();renderRecs();renderLocChips();toast("삭제됐어요");
+    };
+    list.appendChild(el);
+  });
+}
+
+// tabs
+$$(".tab").forEach(t=>t.onclick=()=>{
+  $$(".tab").forEach(x=>x.classList.remove("active"));
+  $$(".view").forEach(x=>x.classList.remove("active"));
+  t.classList.add("active");
+  $("#"+t.dataset.view).classList.add("active");
+});
+
+// init
+$("#date").value=today();
+renderLocChips();
+renderRecs();
+
+// PWA: register service worker (works when hosted, e.g. GitHub Pages)
+if("serviceWorker" in navigator){
+  window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
+}
+</script>
+</body>
+</html>
