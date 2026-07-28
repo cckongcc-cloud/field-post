@@ -231,8 +231,10 @@
           <textarea id="blogOut" rows="13"></textarea>
           <p class="hint">📷 자리엔 <b>직접 찍은 원본 사진</b>을, (직접) 자리엔 <b>실제 겪은 것·수치</b>를 채워 발행하세요. 원본 사진과 구체적 수치가 네이버 상위노출의 핵심이에요.</p>
           <button class="sendbtn" id="sendPhotos">📤 사진 순서대로 앱으로 보내기</button>
-          <p class="hint">공유창에서 <b>네이버 블로그</b>를 고르면 전→후 순서로 사진이 새 글에 들어가요. 글은 자동 복사되니 붙여넣기만 하면 됩니다.</p>
         </div>
+
+        <button class="sendbtn" id="aiPrompt" style="background:var(--ink);border-color:var(--ink)">🤖 AI로 자연스럽게 쓰기 (프롬프트 복사)</button>
+        <p class="hint" style="margin:8px 2px 16px">복사해서 <b>클로드/챗GPT 앱</b>에 붙여넣으면 현장 정보로 진짜 후기 글을 써줘요. 받은 글을 네이버·인스타에 쓰면 됩니다.</p>
 
         <button class="save" id="save">기록에 저장</button>
       </div>
@@ -243,7 +245,7 @@
       <div id="recList"></div>
     </section>
   </main>
-  <p class="foot">v1.3 · 로컬 저장 · 만든 건 내 폰 안에만</p>
+  <p class="foot">v1.4 · 로컬 저장 · 만든 건 내 폰 안에만</p>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -472,6 +474,36 @@ $("#sendPhotos").addEventListener("click",async()=>{
   } else {
     alert("이 기기는 앱으로 바로 보내기가 안 돼요.\n\n갤러리에서 사진을 선택 → 공유 → 네이버 블로그 앱으로 보내세요. 글은 이미 복사돼 있으니 붙여넣으면 됩니다.");
   }
+});
+
+// build an AI prompt from the current inputs → paste into Claude/ChatGPT app
+function aiPrompt(){
+  const loc=$("#loc").value.trim(), memo=$("#memo").value.trim();
+  const kind = gong? KIND[gong.k] : "조경";
+  const date = fmtDate($("#date").value||today());
+  const b=photos.filter(p=>p.tag==="before").length, a=photos.filter(p=>p.tag==="after").length;
+  return [
+    "너는 조경 시공업체 사장이다. 아래 현장 정보로 자연스러운 한국어 글 두 개를 써줘.",
+    "광고 티가 나면 안 되고, 네이버 저품질에 안 걸리게 같은 키워드 반복은 피하고, 구체적 상황·수치를 살려줘.",
+    "",
+    "① 네이버 블로그 후기 — 제목 + 본문 600~900자, 1인칭 시공 후기 말투, 사진 들어갈 자리 표시(📷)",
+    "② 인스타그램 캡션 — 짧게, 해시태그 8~12개",
+    "",
+    "[현장 정보]",
+    `- 공종: ${kind}`,
+    `- 위치: ${loc||"(미입력)"}`,
+    `- 날짜: ${date}`,
+    memo?`- 특이사항: ${memo}`:"- 특이사항: (없음)",
+    `- 사진: 시공 전 ${b}장, 시공 후 ${a}장`,
+    "",
+    "내가 실제로 안 겪은 건 지어내지 말고, 모르는 디테일은 (직접 입력)으로 비워둬."
+  ].join("\n");
+}
+$("#aiPrompt").addEventListener("click",async()=>{
+  if(!gong){toast("공종을 먼저 골라주세요");return;}
+  const t=aiPrompt();
+  try{ await navigator.clipboard.writeText(t); toast("프롬프트 복사됨 · 클로드 앱에 붙여넣기"); }
+  catch(e){ fallbackCopy(t); }
 });
 
 // history
